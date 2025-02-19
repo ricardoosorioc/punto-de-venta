@@ -3,6 +3,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db');
 
+const authRoutes = require('./authRoutes');
+const userRoutes = require('./userRoutes');
+
 // Ruta de prueba para ver si la conexión funciona
 router.get('/test-db', async (req, res) => {
   try {
@@ -16,5 +19,8 @@ router.get('/test-db', async (req, res) => {
     res.status(500).json({ error: 'DB connection error' });
   }
 });
+
+router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 
 module.exports = router;
