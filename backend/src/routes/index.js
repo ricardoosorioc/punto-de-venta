@@ -5,6 +5,8 @@ const pool = require('../config/db');
 
 const authRoutes = require('./authRoutes');
 const userRoutes = require('./userRoutes');
+const productRoutes = require('./productRoutes');
+const salesRoutes = require('./salesRoutes');
 
 // Ruta de prueba para ver si la conexión funciona
 router.get('/test-db', async (req, res) => {
@@ -22,5 +24,7 @@ router.get('/test-db', async (req, res) => {
 
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
+router.use('/products', productRoutes);
+router.use('/sales', salesRoutes);
 
 module.exports = router;
