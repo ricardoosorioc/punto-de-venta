@@ -8,6 +8,20 @@ interface CurrentUser {
   email: string;
 }
 
+interface Product {
+  //product: Array<1>;
+  id: number;
+  name: string;
+  description: string | null;
+  cost: number;
+  price: number;
+  stock: number;
+  barcode: string | null;
+  is_composite: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 interface Sale {
   id: number;
   user_id: number;
@@ -21,6 +35,7 @@ interface SaleItem {
   product_id: number;
   product_name: string;
   quantity: number;
+  price: number;
   unit_price?: number; // opcional si deseamos forzar un precio distinto
 }
 
@@ -37,6 +52,10 @@ export default function SalesPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailSaleId, setDetailSaleId] = useState<number | null>(null);
   const [detailItems, setDetailItems] = useState<any[]>([]);
+  const [saleDetail, setSaleDetail] = useState<any>(null);
+
+  // 2) REF PARA TICKET
+  const ticketRef = useRef<HTMLDivElement | null>(null);
 
   // Modal para crear venta
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -54,6 +73,9 @@ export default function SalesPage() {
 
   // Estado para controlar si se muestra la lista de sugerencias
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Campo donde se escribe/escanea el barcode
+  const [barcodeInput, setBarcodeInput] = useState("");
 
   // Referencia para almacenar el ID del setTimeout
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -89,7 +111,6 @@ export default function SalesPage() {
     if (!currentUser) return;
     fetchSales();
   }, [currentUser]);
-
 
   // Efecto: cada vez que searchText cambie
   useEffect(() => {
@@ -132,9 +153,33 @@ export default function SalesPage() {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
-      
     };
   }, [searchText]);
+
+  // E.g. after finalizing sale:
+  useEffect(() => {
+    const saleId = router.query.saleId; // supón que pasamos ?saleId=...
+    if (saleId) {
+      fetchSaleDetails(parseInt(saleId as string));
+    }
+  }, [router.query.saleId]);
+
+  const fetchSaleDetails = async (id: number) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch(`http://localhost:4000/api/sales/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSales(data.sale);
+        setNewSaleItems(data.items);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchSales = async () => {
     setLoading(true);
@@ -180,6 +225,8 @@ export default function SalesPage() {
 
   // 3. Ver detalle de venta
   const handleViewDetail = async (saleId: number) => {
+    setDetailSaleId(saleId);
+
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -193,8 +240,9 @@ export default function SalesPage() {
       if (!res.ok) {
         throw new Error(data.error || "Error al obtener detalle de venta");
       }
-      setDetailSaleId(saleId);
-      setDetailItems(data.items || []);
+
+      setSaleDetail(data.sale);
+      setDetailItems(data.items);
       setShowDetailModal(true);
     } catch (error: any) {
       setError(error.message);
@@ -249,26 +297,115 @@ export default function SalesPage() {
       return;
     }
 
-    const quantityNum = parseInt(itemQuantity);
-    const priceNum = itemUnitPrice
-      ? parseFloat(itemUnitPrice)
-      : selectedProduct.price;
+    // Ver si ya existe en items
+    const idx = newSaleItems.findIndex(
+      (i) => i.product_id === selectedProduct.id
+    );
+    if (idx >= 0) {
+      // Aumentar la quantity
+      const updated = [...newSaleItems];
+      const quantityNum = parseInt(itemQuantity);
+      updated[idx].quantity = updated[idx].quantity + quantityNum;
+      setNewSaleItems(updated);
 
-    const newItem: SaleItem = {
-      product_id: selectedProduct.id,
-      product_name: selectedProduct.name,
-      quantity: quantityNum,
-      unit_price: priceNum,
-    };
+      setSelectedProduct(null);
+      setSearchText("");
+      setSearchResults([]);
+      setItemQuantity("");
+      setItemUnitPrice("");
+    } else {
+      const quantityNum = parseInt(itemQuantity);
+      const priceNum = itemUnitPrice
+        ? parseFloat(itemUnitPrice)
+        : selectedProduct.price;
 
-    setNewSaleItems([...newSaleItems, newItem]);
+      const newItem: SaleItem = {
+        product_id: selectedProduct.id,
+        product_name: selectedProduct.name,
+        quantity: quantityNum,
+        price: selectedProduct.price,
+        unit_price: priceNum,
+      };
 
-    // Limpia los campos
-    setSelectedProduct(null);
-    setSearchText("");
-    setSearchResults([]);
-    setItemQuantity("");
-    setItemUnitPrice("");
+      setNewSaleItems([...newSaleItems, newItem]);
+
+      // Limpia los campos
+      setSelectedProduct(null);
+      setSearchText("");
+      setSearchResults([]);
+      setItemQuantity("");
+      setItemUnitPrice("");
+    }
+  };
+
+  // 1. Manejo del "Enter" en el input
+  const handleBarcodeKeyDown = async (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (!barcodeInput) return;
+      await lookupProductByBarcode(barcodeInput);
+      setBarcodeInput(""); // limpiar para el siguiente
+    }
+  };
+
+  // 2. Buscar el producto en el backend
+  const lookupProductByBarcode = async (code: string) => {
+    setError("");
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("No hay token, inicia sesión");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:4000/api/products/barcode/${code}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) {
+        throw new Error("Producto no encontrado o error en la búsqueda");
+      }
+      const product: Product = await res.json();
+
+      // Agregarlo al "cart"
+      addItemToSale(product);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  // 3. Agregar item al "cart"
+  const addItemToSale = (product: Product) => {
+    // Ver si ya existe en items
+    const idx = newSaleItems.findIndex((i) => i.product_id === product.id);
+    if (idx >= 0) {
+      // Aumentar la quantity
+      const updated = [...newSaleItems];
+      updated[idx].quantity += 1;
+      setNewSaleItems(updated);
+    } else {
+      // Nuevo item
+      const newItem: SaleItem = {
+        product_id: product.id,
+        product_name: product.name,
+        quantity: 1,
+        price: product.price,
+        unit_price: product.price,
+      };
+
+      setNewSaleItems([...newSaleItems, newItem]);
+
+      // Limpia los campos
+      setSelectedProduct(null);
+      setSearchText("");
+      setSearchResults([]);
+      setItemQuantity("");
+      setItemUnitPrice("");
+    }
   };
 
   // Eliminar un item de newSaleItems
@@ -276,6 +413,14 @@ export default function SalesPage() {
     const updated = [...newSaleItems];
     updated.splice(index, 1);
     setNewSaleItems(updated);
+  };
+
+  // IMPRIMIR TICKET
+  const handlePrintTicket = () => {
+    // Generar el "formato" dentro de #ticketArea (ya lo tenemos en "ticketRef")
+    // Llamamos a window.print()
+
+    window.print();
   };
 
   if (!currentUser) {
@@ -401,10 +546,22 @@ export default function SalesPage() {
                 </tbody>
               </table>
             )}
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 text-xl font-bold">
+              Total: ${saleDetail?.total}
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              {/* BOTÓN IMPRIMIR TICKET */}
+              <button
+                onClick={() =>
+                  window.open(`/print/ticket?saleId=${detailSaleId}`, "_blank")
+                }
+              >
+                Imprimir Ticket
+              </button>
+              {/* BOTÓN CERRAR */}
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="rounded bg-gray-400 px-4 py-2 text-white hover:bg-gray-500"
+                className="bg-gray-400 text-white px-4 py-2 rounded"
               >
                 Cerrar
               </button>
@@ -441,6 +598,18 @@ export default function SalesPage() {
                 <option value="transferencia">Transferencia</option>
               </select>
             </div>
+
+            <label className="block font-semibold text-gray-700">
+              Escanear / Teclear Barcode:
+            </label>
+            <input
+              type="text"
+              className="mb-4 w-full border p-2"
+              placeholder="Escanea aquí..."
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              onKeyDown={handleBarcodeKeyDown}
+            />
 
             {/* Lista de items de la venta */}
             {newSaleItems.length > 0 && (
@@ -566,6 +735,7 @@ export default function SalesPage() {
           </div>
         </div>
       )}
+      
     </div>
   );
 }

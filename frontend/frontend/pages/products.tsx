@@ -669,7 +669,9 @@ export default function ProductsPage() {
     }
 
     // 4) Imprimir
+    document.body.classList.add("barcode-mode");
     window.print();
+    document.body.classList.remove("barcode-mode");
 
     // Luego (tras un pequeño delay) limpias
     setTimeout(() => {

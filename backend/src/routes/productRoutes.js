@@ -6,7 +6,8 @@ const {
   getAllProducts,
   getProductById,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  getProductByBarcode
 } = require('../controllers/productController');
 
 const authMiddleware = require('../middlewares/authMiddleware');
@@ -18,6 +19,9 @@ router.get('/', authMiddleware, getAllProducts);
 
 // GET /api/products/:id => Ver detalle de producto
 router.get('/:id', authMiddleware, getProductById);
+
+// GET /api/products/:id => Ver detalle de producto
+router.get('/barcode/:code', authMiddleware, getProductByBarcode);
 
 // POST /api/products => Crear producto (solo admin)
 router.post('/', authMiddleware, verifyAdmin, createProduct);

@@ -136,6 +136,29 @@ exports.getProductById = async (req, res) => {
   }
 };
 
+// Obtener producto por ID
+exports.getProductByBarcode = async (req, res) => {
+  try {
+    const { code } = req.params;
+    
+    // 1. Encabezado del producto
+    const productRes = await pool.query(
+      "SELECT * FROM products WHERE barcode = $1",
+      [code]
+    );
+    if (productRes.rows.length === 0) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+    const product = productRes.rows[0];
+    
+
+
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener producto" });
+  }
+};
+
 // Actualizar producto
 exports.updateProduct = async (req, res) => {
   try {
