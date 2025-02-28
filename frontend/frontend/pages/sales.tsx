@@ -19,6 +19,7 @@ interface Sale {
 
 interface SaleItem {
   product_id: number;
+  product_name: string;
   quantity: number;
   unit_price?: number; // opcional si deseamos forzar un precio distinto
 }
@@ -255,6 +256,7 @@ export default function SalesPage() {
 
     const newItem: SaleItem = {
       product_id: selectedProduct.id,
+      product_name: selectedProduct.name,
       quantity: quantityNum,
       unit_price: priceNum,
     };
@@ -447,6 +449,7 @@ export default function SalesPage() {
                   <thead>
                     <tr className="bg-gray-200">
                       <th className="border p-2">ProductoID</th>
+                      <th className="border p-2">Nombre</th>
                       <th className="border p-2">Cantidad</th>
                       <th className="border p-2">PrecioUnit</th>
                       <th className="border p-2">Quitar</th>
@@ -457,6 +460,9 @@ export default function SalesPage() {
                       <tr key={idx}>
                         <td className="border p-2 text-center">
                           {item.product_id}
+                        </td>
+                        <td className="border p-2 text-center">
+                          {item.product_name}
                         </td>
                         <td className="border p-2 text-center">
                           {item.quantity}
