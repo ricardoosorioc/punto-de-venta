@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/router";
 
 import Table from "@mui/material/Table";
@@ -9,10 +9,10 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import { TextField, Button } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+import Link from "next/link";
 
 interface CurrentUser {
   id: number;
@@ -66,11 +66,8 @@ export default function SalesPage() {
   // Modal para ver detalle de una venta
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [detailSaleId, setDetailSaleId] = useState<number | null>(null);
-  const [detailItems, setDetailItems] = useState<any[]>([]);
-  const [saleDetail, setSaleDetail] = useState<any>(null);
-
-  // 2) REF PARA TICKET
-  const ticketRef = useRef<HTMLDivElement | null>(null);
+  const [detailItems, setDetailItems] = useState<SaleItem[]>([]);
+  const [saleDetail, setSaleDetail] = useState<Sale | null>(null);
 
   // Modal para crear venta
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -78,13 +75,14 @@ export default function SalesPage() {
   const [newSaleItems, setNewSaleItems] = useState<SaleItem[]>([]);
 
   // Campos temporales para agregar un item a newSaleItems
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [itemQuantity, setItemQuantity] = useState("");
   const [itemUnitPrice, setItemUnitPrice] = useState("");
 
   // Estados para autocompletar
   const [searchText, setSearchText] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]); // productos encontrados
+  const [searchResults, setSearchResults] = useState<Product[]>([]); // productos encontrados
 
   const [fromDate, setFromDate] = useState<string | null>(null);
   const [toDate, setToDate] = useState<string | null>(null);
@@ -127,11 +125,7 @@ export default function SalesPage() {
       });
   }, [router]);
 
-  // 2. Cargar la lista de ventas
-  useEffect(() => {
-    if (!currentUser) return;
-    fetchSales();
-  }, [currentUser]);
+  
 
   useEffect(() => {
     if (from) setFromDate(from as string);
@@ -207,7 +201,7 @@ export default function SalesPage() {
     }
   };
 
-  const fetchSales = async (customFrom?: string, customTo?: string) => {
+  const fetchSales = useCallback(async (customFrom?: string, customTo?: string) => {
     setLoading(true);
     setError("");
     const token = localStorage.getItem("token");
@@ -215,13 +209,12 @@ export default function SalesPage() {
       router.push("/login");
       return;
     }
-    // Si no se pasan valores en los parámetros, usa el estado actual
+    
+    // Si no se pasan valores, usa el estado actual
     const finalFrom = customFrom !== undefined ? customFrom : fromDate;
     const finalTo = customTo !== undefined ? customTo : toDate;
 
     let url = "http://localhost:4000/api/sales";
-
-    console.log("Fetching sales from:", finalFrom, "to:", finalTo);
 
     if (finalFrom && finalTo) {
       url += `?from=${finalFrom}&to=${finalTo}`;
@@ -246,7 +239,13 @@ export default function SalesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, fromDate, toDate]);
+
+  // 2. Cargar la lista de ventas
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchSales();
+  }, [currentUser, fetchSales]);
 
   const resetFilters = () => {
     setFromDate(null);
@@ -262,7 +261,7 @@ export default function SalesPage() {
     }, 0);
   };
 
-  const handleSelectProduct = (prod: any) => {
+  const handleSelectProduct = (prod: Product) => {
     setSelectedProduct(prod);
     setSearchText(prod.name); // para mostrar el nombre en el input
     setShowSuggestions(false);
@@ -291,8 +290,12 @@ export default function SalesPage() {
       setSaleDetail(data.sale);
       setDetailItems(data.items);
       setShowDetailModal(true);
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Ocurrió un error desconocido");
+      }
     }
   };
 
@@ -327,8 +330,12 @@ export default function SalesPage() {
       setShowCreateModal(false);
       setNewSaleItems([]);
       fetchSales(); // recarga la lista de ventas
-    } catch (error: any) {
-      alert(error.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Ocurrió un error desconocido");
+      }
     }
   };
 
@@ -420,8 +427,12 @@ export default function SalesPage() {
 
       // Agregarlo al "cart"
       addItemToSale(product);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Ocurrió un error desconocido");
+      }
     }
   };
 
@@ -477,14 +488,6 @@ export default function SalesPage() {
     ? sales.filter((s) => isToday(s.sale_date))
     : sales;
 
-  // IMPRIMIR TICKET
-  const handlePrintTicket = () => {
-    // Generar el "formato" dentro de #ticketArea (ya lo tenemos en "ticketRef")
-    // Llamamos a window.print()
-
-    window.print();
-  };
-
   if (!currentUser) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
@@ -500,13 +503,13 @@ export default function SalesPage() {
         <h2 className="text-xl font-bold text-white">Ventas</h2>
         <div className="flex gap-2">
           {/* Botón volver a dashboard */}
-          <a
+          <Link
             href="/dashboard"
             className="flex items-center rounded bg-red-400 py-2 font-semibold text-white hover:bg-red-500"
           >
             <ArrowBackIcon className="mr-1" />
             Volver
-          </a>
+          </Link>
 
           {/* Botón nueva venta */}
           <button
@@ -553,10 +556,6 @@ export default function SalesPage() {
                 value={toDate || ""}
                 onChange={(e) => setToDate(e.target.value)}
               />
-
-              <Button variant="contained" color="primary" onClick={() => fetchSales(fromDate || "", toDate || "")}>
-                Aplicar Filtro
-              </Button>
               <Button
                 variant="outlined"
                 color="secondary"
@@ -633,7 +632,7 @@ export default function SalesPage() {
                 </thead>
                 <tbody>
                   {detailItems.map((item) => (
-                    <tr key={item.id}>
+                    <tr key={item.product_id}>
                       <td className="border p-2">
                         {item.product_name || `ID ${item.product_id}`}
                       </td>
@@ -644,7 +643,7 @@ export default function SalesPage() {
                         ${item.unit_price}
                       </td>
                       <td className="border p-2 text-right">
-                        ${item.quantity * item.unit_price}
+                        ${item.quantity * (item.unit_price ?? 0)}
                       </td>
                     </tr>
                   ))}

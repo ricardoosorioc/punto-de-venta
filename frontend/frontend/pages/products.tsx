@@ -10,10 +10,10 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import { Button } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddBoxIcon from "@mui/icons-material/AddBox";
+import Link from "next/link";
 
 interface CurrentUser {
   id: number;
@@ -44,6 +44,17 @@ interface CompositionChild {
   child_cost: number;
 }
 
+interface ProductBody {
+  name: string;
+  description?: string;
+  cost: number;
+  price: number;
+  stock: number;
+  barcode?: string;
+  is_composite: boolean;
+  children?: { child_product_id: number; quantity: number }[];
+}
+
 export default function ProductsPage() {
   const router = useRouter();
 
@@ -66,7 +77,6 @@ export default function ProductsPage() {
   const [createCost, setCreateCost] = useState("0");
   const [createPrice, setCreatePrice] = useState("0");
   const [createStock, setCreateStock] = useState("0");
-  const [createBarcode, setCreateBarcode] = useState("");
   const [createIsComposite, setCreateIsComposite] = useState(false);
 
   // Hijos de un producto composto (nuevo)
@@ -182,9 +192,14 @@ export default function ProductsPage() {
         throw new Error(data.error || "Error al obtener productos");
       }
       setProducts(data);
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
+    } catch (error) {
+  if (error instanceof Error) {
+    setError(error.message);
+  } else {
+    setError("Ocurrió un error desconocido");
+  }
+}
+ finally {
       setLoading(false);
     }
   };
@@ -202,13 +217,13 @@ export default function ProductsPage() {
     try {
       // Armamos el body
       // Si es compuesto, agregamos children
-      const body: any = {
+      const body: ProductBody = {
         name: createName,
         description: createDescription,
         cost: parseFloat(createCost),
         price: parseFloat(createPrice),
         stock: parseInt(createStock),
-        barcode: null,
+        barcode: undefined,
         is_composite: createIsComposite,
       };
 
@@ -240,15 +255,19 @@ export default function ProductsPage() {
       setCreateCost("0");
       setCreatePrice("0");
       setCreateStock("0");
-      setCreateBarcode("");
       setCreateIsComposite(false);
       setCreateChildren([]);
 
       // Refrescar lista
       fetchProducts(searchText);
-    } catch (error: any) {
-      setError(error.message);
-    }
+    } catch (error) {
+  if (error instanceof Error) {
+    setError(error.message);
+  } else {
+    setError("Ocurrió un error desconocido");
+  }
+}
+
   };
 
   // Autocompletado para "childSearchText" en crear
@@ -400,6 +419,7 @@ export default function ProductsPage() {
           if (res.ok) {
             // data.children = array con (child_product_id, child_name, quantity, etc.)
             if (Array.isArray(data.children)) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const mapped = data.children.map((c: any) => ({
                 child_product_id: c.child_product_id,
                 child_name: c.child_name || "Hijo",
@@ -427,13 +447,13 @@ export default function ProductsPage() {
 
     try {
       // Armamos body
-      const body: any = {
+      const body: ProductBody = {
         name: editName,
         description: editDescription,
         cost: parseFloat(editCost),
         price: parseFloat(editPrice),
         stock: parseInt(editStock),
-        barcode: editBarcode || null,
+        barcode: editBarcode || undefined,
         is_composite: editIsComposite,
       };
 
@@ -462,9 +482,14 @@ export default function ProductsPage() {
       setShowEditModal(false);
       setEditingProduct(null);
       fetchProducts(searchText);
-    } catch (error: any) {
-      setError(error.message);
-    }
+    } catch (error) {
+  if (error instanceof Error) {
+    setError(error.message);
+  } else {
+    setError("Ocurrió un error desconocido");
+  }
+}
+
   };
 
   // Autocompletado en modo edición
@@ -577,9 +602,14 @@ export default function ProductsPage() {
         throw new Error(data.error || "Error al eliminar producto");
       }
       fetchProducts(searchText);
-    } catch (error: any) {
-      setError(error.message);
-    }
+    } catch (error) {
+  if (error instanceof Error) {
+    setError(error.message);
+  } else {
+    setError("Ocurrió un error desconocido");
+  }
+}
+
   };
 
   // =============== MOSTRAR BARCODE (MODAL) =================
@@ -627,7 +657,7 @@ export default function ProductsPage() {
     // 1) Limpiar el contenido anterior
     printAreaRef.current.innerHTML = "";
 
-    let code = barcodeProduct.barcode;
+    const code = barcodeProduct.barcode;
 
     console.log("El codigo que esta ingresando es:", code);
 
@@ -692,12 +722,7 @@ export default function ProductsPage() {
         printAreaRef.current.innerHTML = "";
       }
     }, 500);
-  };
-
-  // Botón para imprimir solo la etiqueta (puede ser un approach con CSS)
-  const handlePrintBarcode = () => {
-    window.print(); // O un approach más refinado
-  };
+  };  
 
   // Filtro de bajo stock
   const filteredProducts = products.filter((p) => {
@@ -723,13 +748,13 @@ export default function ProductsPage() {
       <div className="mb-4 flex items-center justify-between bg-blue-950 p-4 shadow">
         <h2 className="text-xl font-bold text-white">Gestión de Productos</h2>
         <div className="flex gap-1">
-          <a
+          <Link
             href="/dashboard"
             className="flex items-center rounded bg-red-400 py-2 font-semibold text-white hover:bg-red-500"
           >
             <ArrowBackIcon className="mr-1" />
             Volver
-          </a>
+          </Link>
 
           {isAdmin && (
             <button

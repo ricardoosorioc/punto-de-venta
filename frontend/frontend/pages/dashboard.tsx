@@ -8,14 +8,13 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import { Button } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 
 import GroupIcon from "@mui/icons-material/Group";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import LogoutIcon from "@mui/icons-material/Logout";
+import Link from "next/link";
 
 // Representa el usuario retornado por /api/auth/me
 interface CurrentUser {
@@ -109,9 +108,14 @@ export default function DashboardPage() {
       setUsers(data);
       // **Activamos** la vista de la tabla
       setShowUserList(true);
-    } catch (error: any) {
-      setError(error.message);
-    }
+    } catch (error) {
+  if (error instanceof Error) {
+    setError(error.message);
+  } else {
+    setError("Ocurrió un error desconocido");
+  }
+}
+
   };
 
   // Manejo de logout
@@ -160,9 +164,14 @@ export default function DashboardPage() {
       setShowEditModal(false);
       // Refresca lista de usuarios
       fetchUsers();
-    } catch (error: any) {
-      setError(error.message);
-    }
+    } catch (error) {
+  if (error instanceof Error) {
+    setError(error.message);
+  } else {
+    setError("Ocurrió un error desconocido");
+  }
+}
+
   };
 
   // --- FUNCIONES PARA CAMBIAR CONTRASEÑA ---
@@ -199,13 +208,18 @@ export default function DashboardPage() {
         throw new Error(data.error || "Error al cambiar contraseña");
       }
       setShowPasswordModal(false);
-    } catch (error: any) {
-      setError(error.message);
-    }
+    } catch (error) {
+  if (error instanceof Error) {
+    setError(error.message);
+  } else {
+    setError("Ocurrió un error desconocido");
+  }
+}
+
   };
 
   // --- LÓGICA DE UI PARA BOTONES ---
-  const canEdit = (rowUserId: number) => {
+  const canEdit = () => {
     if (!currentUser) return false;
     return currentUser.role === "admin";
   };
@@ -272,29 +286,29 @@ export default function DashboardPage() {
                 </button>
               )}
 
-              <a
+              <Link
                 href="/products"
                 className="flex items-center rounded bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
               >
                 <Inventory2Icon className="mr-1" />
                 Administrar productos
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/sales"
                 className="flex items-center rounded bg-yellow-600 px-4 py-2 my-4 font-semibold text-white hover:bg-yellow-700"
               >
                 <PointOfSaleIcon className="mr-1" />
                 Ir a Ventas
-              </a>
+              </Link>
 
-              <a
+              <Link
                 href="/reports"
                 className="flex items-center rounded bg-pink-600 px-4 py-2 font-semibold text-white hover:bg-pink-700"
               >
                 <AssessmentIcon className="mr-1" />
                 Ir a Reportes
-              </a>
+              </Link>
             </div>
 
             {/* Tabla de usuarios SI showUserList es true */}
@@ -339,7 +353,7 @@ export default function DashboardPage() {
                               {new Date(u.created_at).toLocaleString()}
                             </TableCell>
                             <TableCell className="border p-2">
-                              {canEdit(u.id) && (
+                              {canEdit() && (
                                 <button
                                   onClick={() => handleEditClick(u)}
                                   className="mr-2 rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
@@ -385,18 +399,18 @@ export default function DashboardPage() {
               >
                 Cambiar mi contraseña
               </button>
-              <a
+              <Link
                 href="/products"
                 className="rounded bg-green-600 px-4 py-2 my-4 font-semibold text-white hover:bg-green-700"
               >
                 Ver Productos
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/sales"
                 className="rounded bg-yellow-600 px-4 py-2 my-4 font-semibold text-white hover:bg-yellow-700"
               >
                 Ir a Ventas
-              </a>
+              </Link>
             </div>
           </div>
         )}

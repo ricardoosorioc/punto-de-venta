@@ -36,9 +36,14 @@ export default function LoginPage() {
         // Redirigir al dashboard
         router.push("/dashboard");
       }
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Ocurrió un error desconocido");
+      }
     }
+    
   };
 
   return (

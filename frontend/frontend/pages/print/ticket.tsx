@@ -2,10 +2,24 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 
+interface Sale {
+  id: number;
+  sale_date: string;
+  payment_method: string;
+  total: number;
+}
+
+interface SaleItem {
+  id: number;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+}
+
 export default function PrintTicketPage() {
   const router = useRouter();
-  const [sale, setSale] = useState<any>(null);
-  const [items, setItems] = useState<any[]>([]);
+  const [sale, setSale] = useState<Sale | null>(null);
+  const [items, setItems] = useState<SaleItem[]>([]);
 
   useEffect(() => {
     const { saleId } = router.query;
@@ -97,6 +111,16 @@ export default function PrintTicketPage() {
           Color Explosion
         </h1>
         <p style={{ textAlign: "center", margin: "4px 0" }}>
+          <strong>NIT:</strong> 43472470-1
+        </p>
+        <p style={{ textAlign: "center", margin: "4px 0" }}>
+          <strong>Dirección:</strong> Calle 12 #10-19
+        </p>
+        <hr />
+        <p style={{ textAlign: "center", margin: "4px 0" }}>
+          <strong>FACTURA DE VENTA</strong>
+        </p>
+        <p style={{ textAlign: "center", margin: "4px 0" }}>
           Fecha: {new Date(sale.sale_date).toLocaleString()}
         </p>
         <p style={{ textAlign: "center", margin: "4px 0" }}>
@@ -107,18 +131,27 @@ export default function PrintTicketPage() {
         <table style={{ width: "100%", marginBottom: "6px" }}>
           <thead>
             <tr>
-              <th style={{ textAlign: "left" }}>Producto</th>
               <th style={{ textAlign: "center" }}>Cant</th>
+              <th style={{ textAlign: "left" }}>Producto</th>
+              <th
+                style={{
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                Unitario
+              </th>
               <th style={{ textAlign: "right" }}>Subtotal</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item: any) => {
+            {items.map((item: SaleItem) => {
               const subtotal = item.quantity * item.unit_price;
               return (
                 <tr key={item.id}>
-                  <td style={{ textAlign: "left" }}>{item.product_name}</td>
                   <td style={{ textAlign: "center" }}>{item.quantity}</td>
+                  <td style={{ textAlign: "left" }}>{item.product_name}</td>
+                  <td style={{ textAlign: "right" }}>${item.unit_price}</td>
                   <td style={{ textAlign: "right" }}>${subtotal}</td>
                 </tr>
               );

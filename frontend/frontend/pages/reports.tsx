@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -8,8 +9,6 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
-import { Button } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -18,6 +17,23 @@ interface CurrentUser {
   role: string;
   name: string;
   email: string;
+}
+
+interface SalesReport {
+  date_label: string;
+  total_sales: number;
+}
+
+interface ProfitReport {
+  date_label: string;
+  income_total: number;
+  cost_total: number;
+  profit: number;
+}
+
+interface TopProduct {
+  name: string;
+  total_sold: number;
 }
 
 export default function ReportsPage() {
@@ -29,16 +45,16 @@ export default function ReportsPage() {
   const [salesRange, setSalesRange] = useState<"daily" | "weekly" | "monthly">(
     "daily"
   );
-  const [salesData, setSalesData] = useState<any[]>([]);
+  const [salesData, setSalesData] = useState<SalesReport[]>([]);
 
   // Para “utilidades”
   const [profitRange, setProfitRange] = useState<
     "daily" | "weekly" | "monthly"
   >("daily");
-  const [profitData, setProfitData] = useState<any[]>([]);
+  const [profitData, setProfitData] = useState<ProfitReport[]>([]);
 
   // Para “top products”
-  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [topLimit, setTopLimit] = useState(5); // default
 
   // 1. Verificar user
@@ -98,8 +114,12 @@ export default function ReportsPage() {
       if (!res.ok)
         throw new Error(data.error || "Error al obtener reporte de ventas");
       setSalesData(data); // array con { date_label, total_sales }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Ocurrió un error desconocido");
+      }
     }
   };
 
@@ -118,8 +138,12 @@ export default function ReportsPage() {
       if (!res.ok)
         throw new Error(data.error || "Error al obtener reporte de utilidades");
       setProfitData(data); // array con { date_label, income_total, cost_total, profit }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Ocurrió un error desconocido");
+      }
     }
   };
 
@@ -138,12 +162,16 @@ export default function ReportsPage() {
       if (!res.ok)
         throw new Error(data.error || "Error al obtener top products");
       setTopProducts(data); // array con { id, name, total_sold }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError("Ocurrió un error desconocido");
+      }
     }
   };
 
-  const handleDateClick = (date: String) => {
+  const handleDateClick = (date: string) => {
     router.push(`/sales?from=${date}&to=${date}`);
     console.log(`/sales?from=${date}&to=${date}`);
   };
@@ -160,13 +188,13 @@ export default function ReportsPage() {
     <div className="flex min-h-screen flex-col bg-blue-400 p-4">
       <div className="mb-4 flex items-center justify-between bg-blue-950 p-4 shadow">
         <h2 className="text-xl font-bold text-white">Reportes</h2>
-        <a
+        <Link
           href="/dashboard"
           className="flex items-center rounded bg-red-400 px-2 py-2 font-semibold text-white hover:bg-red-500"
         >
           <ArrowBackIcon className="mr-1" />
           Volver
-        </a>
+        </Link>
       </div>
 
       <div className="mx-auto w-full max-w-5xl bg-white p-4 shadow">
@@ -212,7 +240,7 @@ export default function ReportsPage() {
                         {row.date_label}
                       </TableCell>
                       <TableCell className="border p-2 text-right">
-                        ${parseFloat(row.total_sales).toFixed(2)}
+                        ${parseFloat(String(row.total_sales)).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -255,17 +283,15 @@ export default function ReportsPage() {
                 <TableBody>
                   {profitData.map((row, idx) => (
                     <TableRow key={idx}>
-                      <TableCell className="border p-2">
-                        {row.date_label}
+                      <TableCell className="border p-2">{row.date_label}</TableCell>
+                      <TableCell className="border p-2 text-right">
+                        ${parseFloat(String(row.income_total)).toFixed(2)}
                       </TableCell>
                       <TableCell className="border p-2 text-right">
-                        ${parseFloat(row.income_total).toFixed(2)}
+                        ${parseFloat(String(row.cost_total)).toFixed(2)}
                       </TableCell>
                       <TableCell className="border p-2 text-right">
-                        ${parseFloat(row.cost_total).toFixed(2)}
-                      </TableCell>
-                      <TableCell className="border p-2 text-right">
-                        ${parseFloat(row.profit).toFixed(2)}
+                        ${parseFloat(String(row.profit)).toFixed(2)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -301,7 +327,9 @@ export default function ReportsPage() {
                 <TableBody>
                   {topProducts.map((row, idx) => (
                     <TableRow key={idx}>
-                      <TableCell className="border p-2">{row.name}</TableCell>
+                      <TableCell className="border p-2">
+                        {row.name}
+                      </TableCell>
                       <TableCell className="border p-2 text-right">
                         {row.total_sold}
                       </TableCell>
