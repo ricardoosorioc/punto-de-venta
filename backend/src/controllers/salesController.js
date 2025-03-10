@@ -183,19 +183,53 @@ exports.createSale = async (req, res) => {
  */
 exports.getAllSales = async (req, res) => {
   try {
-    // Podrías hacer un JOIN a la tabla de usuarios para saber quién la hizo
-    const result = await pool.query(`
+    const { from, to } = req.query;
+    let query = `
       SELECT s.*, u.name as user_name
       FROM sales s
       LEFT JOIN users u ON u.id = s.user_id
-      ORDER BY s.id DESC
-    `);
+      ORDER BY s.sale_date DESC
+    `;
+    let params = [];
+
+    if (from && to) {
+      query = `
+        SELECT s.*, u.name as user_name
+        FROM sales s
+        LEFT JOIN users u ON u.id = s.user_id
+        WHERE s.sale_date BETWEEN $1::timestamp AND $2::timestamp + interval '1 day' - interval '1 second'
+        ORDER BY s.sale_date DESC
+      `;
+      params = [from, to];
+    } else if (from) {
+      query = `
+        SELECT s.*, u.name as user_name
+        FROM sales s
+        LEFT JOIN users u ON u.id = s.user_id
+        WHERE s.sale_date >= $1::timestamp
+        ORDER BY s.sale_date DESC
+      `;
+      params = [from];
+    } else if (to) {
+      query = `
+        SELECT s.*, u.name as user_name
+        FROM sales s
+        LEFT JOIN users u ON u.id = s.user_id
+        WHERE s.sale_date <= $1::timestamp + interval '1 day' - interval '1 second'
+        ORDER BY s.sale_date DESC
+      `;
+      params = [to];
+    }
+
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
     console.error("Error al obtener ventas:", error);
     res.status(500).json({ error: "Error al obtener ventas" });
   }
 };
+
+
 
 /**
  * Obtener detalles de una venta por ID.

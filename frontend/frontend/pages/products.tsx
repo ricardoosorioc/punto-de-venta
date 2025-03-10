@@ -2,6 +2,19 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 import JsBarcode from "jsbarcode";
 
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import { Button } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import AddBoxIcon from "@mui/icons-material/AddBox";
+
 interface CurrentUser {
   id: number;
   role: string;
@@ -705,22 +718,25 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-100 p-4">
+    <div className="flex min-h-screen flex-col bg-blue-400 p-4">
       {/* Encabezado */}
-      <div className="mb-4 flex items-center justify-between bg-white p-4 shadow">
-        <h2 className="text-xl font-bold">Gestión de Productos</h2>
-        <div className="flex gap-2">
+      <div className="mb-4 flex items-center justify-between bg-blue-950 p-4 shadow">
+        <h2 className="text-xl font-bold text-white">Gestión de Productos</h2>
+        <div className="flex gap-1">
           <a
             href="/dashboard"
-            className="rounded bg-gray-400 px-4 py-2 font-semibold text-white hover:bg-gray-500"
+            className="flex items-center rounded bg-red-400 py-2 font-semibold text-white hover:bg-red-500"
           >
+            <ArrowBackIcon className="mr-1" />
             Volver
           </a>
+
           {isAdmin && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-green-600"
+              className="flex items-center rounded bg-blue-600 py-2 font-semibold text-white hover:bg-green-600"
             >
+              <AddBoxIcon className="mr-1" />
               Crear Producto
             </button>
           )}
@@ -767,64 +783,74 @@ export default function ProductsPage() {
           <p>Cargando productos...</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="border p-2 text-center">ID</th>
-                  <th className="border p-2">Nombre</th>
-                  <th className="border p-2">Precio</th>
-                  <th className="border p-2">Stock</th>
-                  <th className="border p-2">Creado</th>
-                  <th className="border p-2">Barcode</th>
-                  <th className="border p-2">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProducts.map((prod) => (
-                  <tr
-                    key={prod.id}
-                    className={prod.stock < 5 ? "bg-red-100" : ""}
-                  >
-                    <td className="border p-2 text-center">{prod.id}</td>
-                    <td className="border p-2">{prod.name}</td>
-                    <td className="border p-2">${prod.price}</td>
-                    <td className="border p-2">{prod.stock}</td>
-                    <td className="border p-2">
-                      {new Date(prod.created_at).toLocaleString()}
-                    </td>
-                    <td className="border p-2">
-                      {prod.barcode || "Generado automático"}
-                    </td>
-                    <td className="border p-2">
-                      {isAdmin && (
-                        <>
-                          <button
-                            onClick={() => openEditModal(prod)}
-                            className="mr-2 rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProduct(prod.id)}
-                            className="rounded bg-red-500 px-2 py-1 text-white hover:bg-red-600"
-                          >
-                            Eliminar
-                          </button>
-                          {prod.barcode && (
-                            <button
-                              onClick={() => handleOpenBarcodeModal(prod)}
-                              className="rounded bg-blue-500 px-2 py-1 text-white hover:bg-blue-600"
-                            >
-                              Ver Código
-                            </button>
+            <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+              <Table sx={{ minWidth: 650 }} aria-label="products table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center">ID</TableCell>
+                    <TableCell>Nombre</TableCell>
+                    <TableCell>Precio</TableCell>
+                    <TableCell>Stock</TableCell>
+                    <TableCell>Creado</TableCell>
+                    <TableCell>Barcode</TableCell>
+                    <TableCell>Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredProducts.map((prod) => {
+                    const rowStyle =
+                      prod.stock < 5
+                        ? { backgroundColor: "#fee2e2" } // color similar a bg-red-100
+                        : {};
+                    return (
+                      <TableRow key={prod.id} sx={rowStyle}>
+                        <TableCell align="center">{prod.id}</TableCell>
+                        <TableCell>{prod.name}</TableCell>
+                        <TableCell>${prod.price}</TableCell>
+                        <TableCell>{prod.stock}</TableCell>
+                        <TableCell>
+                          {new Date(prod.created_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          {prod.barcode || "Generado automático"}
+                        </TableCell>
+                        <TableCell>
+                          {/* Botones con MUI */}
+                          {isAdmin && (
+                            <>
+                              <Button
+                                variant="contained"
+                                color="success"
+                                onClick={() => openEditModal(prod)}
+                                sx={{ mr: 1 }}
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                variant="contained"
+                                color="error"
+                                onClick={() => handleDeleteProduct(prod.id)}
+                                sx={{ mr: 1 }}
+                              >
+                                Eliminar
+                              </Button>
+                              {prod.barcode && (
+                                <Button
+                                  variant="contained"
+                                  onClick={() => handleOpenBarcodeModal(prod)}
+                                >
+                                  Ver Código
+                                </Button>
+                              )}
+                            </>
                           )}
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </div>
         )}
       </div>

@@ -1,6 +1,22 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import { Button } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+
+import GroupIcon from "@mui/icons-material/Group";
+import Inventory2Icon from "@mui/icons-material/Inventory2";
+import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import LogoutIcon from "@mui/icons-material/Logout";
+
 // Representa el usuario retornado por /api/auth/me
 interface CurrentUser {
   id: number;
@@ -224,6 +240,7 @@ export default function DashboardPage() {
           onClick={handleLogout}
           className="rounded bg-red-500 px-4 py-2 font-semibold text-white hover:bg-red-600"
         >
+          <LogoutIcon className="mr-1" />
           Cerrar sesión
         </button>
       </div>
@@ -241,31 +258,42 @@ export default function DashboardPage() {
               Bienvenido, Admin {currentUser.name}
             </h3>
             <p className="mb-4 text-gray-700">
-              Aquí puedes gestionar usuarios. Haz clic en el siguiente botón
-              para cargar la lista de usuarios.
+              A continuación encuentras las acciones que puedes realizar
             </p>
             <div className="flex flex-col items-center">
               {/* BOTÓN "VER USUARIOS" */}
               {!showUserList && (
                 <button
                   onClick={fetchUsers}
-                  className="mb-4 rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                  className="mb-4 flex items-center rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
                 >
+                  <GroupIcon className="mr-1" />
                   Ver usuarios
                 </button>
               )}
 
               <a
                 href="/products"
-                className="rounded bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
+                className="flex items-center rounded bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
               >
+                <Inventory2Icon className="mr-1" />
                 Administrar productos
               </a>
+
               <a
                 href="/sales"
-                className="rounded bg-yellow-600 px-4 py-2 my-4 font-semibold text-white hover:bg-yellow-700"
+                className="flex items-center rounded bg-yellow-600 px-4 py-2 my-4 font-semibold text-white hover:bg-yellow-700"
               >
+                <PointOfSaleIcon className="mr-1" />
                 Ir a Ventas
+              </a>
+
+              <a
+                href="/reports"
+                className="flex items-center rounded bg-pink-600 px-4 py-2 font-semibold text-white hover:bg-pink-700"
+              >
+                <AssessmentIcon className="mr-1" />
+                Ir a Reportes
               </a>
             </div>
 
@@ -276,49 +304,65 @@ export default function DashboardPage() {
                   Lista de Usuarios
                 </h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-200">
-                        <th className="border p-2 text-center">ID</th>
-                        <th className="border p-2">Nombre</th>
-                        <th className="border p-2">Email</th>
-                        <th className="border p-2 text-center">Rol</th>
-                        <th className="border p-2">Creado</th>
-                        <th className="border p-2">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((u) => (
-                        <tr key={u.id}>
-                          <td className="border p-2 text-center">{u.id}</td>
-                          <td className="border p-2">{u.name}</td>
-                          <td className="border p-2">{u.email}</td>
-                          <td className="border p-2 text-center">{u.role}</td>
-                          <td className="border p-2">
-                            {new Date(u.created_at).toLocaleString()}
-                          </td>
-                          <td className="border p-2">
-                            {canEdit(u.id) && (
-                              <button
-                                onClick={() => handleEditClick(u)}
-                                className="mr-2 rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
-                              >
-                                Editar
-                              </button>
-                            )}
-                            {canChangePassword(u.id) && (
-                              <button
-                                onClick={() => handleChangePasswordClick(u.id)}
-                                className="rounded bg-purple-500 px-2 py-1 text-white hover:bg-purple-600"
-                              >
-                                Cambiar Contraseña
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                    <Table sx={{ minWidth: 650 }} aria-label="products table">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell className="border p-2 text-center">
+                            ID
+                          </TableCell>
+                          <TableCell className="border p-2">Nombre</TableCell>
+                          <TableCell className="border p-2">Email</TableCell>
+                          <TableCell className="border p-2 text-center">
+                            Rol
+                          </TableCell>
+                          <TableCell className="border p-2">Creado</TableCell>
+                          <TableCell className="border p-2">Acciones</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {users.map((u) => (
+                          <TableRow key={u.id}>
+                            <TableCell className="border p-2 text-center">
+                              {u.id}
+                            </TableCell>
+                            <TableCell className="border p-2">
+                              {u.name}
+                            </TableCell>
+                            <TableCell className="border p-2">
+                              {u.email}
+                            </TableCell>
+                            <TableCell className="border p-2 text-center">
+                              {u.role}
+                            </TableCell>
+                            <TableCell className="border p-2">
+                              {new Date(u.created_at).toLocaleString()}
+                            </TableCell>
+                            <TableCell className="border p-2">
+                              {canEdit(u.id) && (
+                                <button
+                                  onClick={() => handleEditClick(u)}
+                                  className="mr-2 rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
+                                >
+                                  Editar
+                                </button>
+                              )}
+                              {canChangePassword(u.id) && (
+                                <button
+                                  onClick={() =>
+                                    handleChangePasswordClick(u.id)
+                                  }
+                                  className="rounded bg-purple-500 px-2 py-1 text-white hover:bg-purple-600"
+                                >
+                                  Cambiar Contraseña
+                                </button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
                 </div>
               </>
             )}
@@ -328,19 +372,16 @@ export default function DashboardPage() {
         {currentUser.role === "vendedor" && (
           <div>
             <h3 className="text-lg font-semibold">
-              Bienvenido, {currentUser.name}
+              Bienvenido, Vendedor {currentUser.name}
             </h3>
+
             <p className="mt-2 text-gray-600">
-              (Eres vendedor, por lo que no tienes acceso a la lista de
-              usuarios.)
-            </p>
-            <p className="mt-2 text-gray-600">
-              Sin embargo, puedes cambiar tu propia contraseña si así lo deseas.
+              A continuación encuentras las acciones que puedes realizar
             </p>
             <div className="flex flex-col items-center px-3 py-3 my-3">
               <button
                 onClick={() => handleChangePasswordClick(currentUser.id)}
-                className="mt-4 rounded bg-purple-500 px-4 py-2 font-semibold text-white hover:bg-purple-600"
+                className="mt-4 rounded bg-purple-500 px-4 py-2 my-4 font-semibold text-white hover:bg-purple-600"
               >
                 Cambiar mi contraseña
               </button>
@@ -348,7 +389,7 @@ export default function DashboardPage() {
                 href="/products"
                 className="rounded bg-green-600 px-4 py-2 my-4 font-semibold text-white hover:bg-green-700"
               >
-                Productos
+                Ver Productos
               </a>
               <a
                 href="/sales"

@@ -99,6 +99,9 @@ export default function PrintTicketPage() {
         <p style={{ textAlign: "center", margin: "4px 0" }}>
           Fecha: {new Date(sale.sale_date).toLocaleString()}
         </p>
+        <p style={{ textAlign: "center", margin: "4px 0" }}>
+          Metodo de Pago: {sale.payment_method}
+        </p>
         <hr />
 
         <table style={{ width: "100%", marginBottom: "6px" }}>

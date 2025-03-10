@@ -1,6 +1,19 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/router";
 
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import { TextField, Button } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+
 interface CurrentUser {
   id: number;
   role: string;
@@ -41,6 +54,8 @@ interface SaleItem {
 
 export default function SalesPage() {
   const router = useRouter();
+  const { from, to } = router.query;
+
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   // Para listar las ventas
@@ -71,11 +86,17 @@ export default function SalesPage() {
   const [searchText, setSearchText] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]); // productos encontrados
 
+  const [fromDate, setFromDate] = useState<string | null>(null);
+  const [toDate, setToDate] = useState<string | null>(null);
+
   // Estado para controlar si se muestra la lista de sugerencias
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Campo donde se escribe/escanea el barcode
   const [barcodeInput, setBarcodeInput] = useState("");
+
+  // en tu componente Sales
+  const [showTodayOnly, setShowTodayOnly] = useState(false);
 
   // Referencia para almacenar el ID del setTimeout
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -111,6 +132,11 @@ export default function SalesPage() {
     if (!currentUser) return;
     fetchSales();
   }, [currentUser]);
+
+  useEffect(() => {
+    if (from) setFromDate(from as string);
+    if (to) setToDate(to as string);
+  }, [from, to]);
 
   // Efecto: cada vez que searchText cambie
   useEffect(() => {
@@ -181,7 +207,7 @@ export default function SalesPage() {
     }
   };
 
-  const fetchSales = async () => {
+  const fetchSales = async (customFrom?: string, customTo?: string) => {
     setLoading(true);
     setError("");
     const token = localStorage.getItem("token");
@@ -189,22 +215,43 @@ export default function SalesPage() {
       router.push("/login");
       return;
     }
+    // Si no se pasan valores en los parámetros, usa el estado actual
+    const finalFrom = customFrom !== undefined ? customFrom : fromDate;
+    const finalTo = customTo !== undefined ? customTo : toDate;
+
+    let url = "http://localhost:4000/api/sales";
+
+    console.log("Fetching sales from:", finalFrom, "to:", finalTo);
+
+    if (finalFrom && finalTo) {
+      url += `?from=${finalFrom}&to=${finalTo}`;
+    } else if (finalFrom) {
+      url += `?from=${finalFrom}`;
+    } else if (finalTo) {
+      url += `?to=${finalTo}`;
+    }
+
     try {
-      const res = await fetch("http://localhost:4000/api/sales", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Error al obtener ventas");
+      if (res.ok) {
+        setSales(data);
+      } else {
+        setError(data.error || "Error al obtener ventas");
       }
-      setSales(data);
-    } catch (error: any) {
-      setError(error.message);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetFilters = () => {
+    setFromDate(null);
+    setToDate(null);
+    fetchSales("", ""); // Llamar fetchSales inmediatamente después de resetear estados
   };
 
   // 2.5 Función para calcular total
@@ -415,6 +462,21 @@ export default function SalesPage() {
     setNewSaleItems(updated);
   };
 
+  function isToday(dateString: string): boolean {
+    const d = new Date(dateString);
+    const now = new Date();
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
+    );
+  }
+
+  // al renderizar la lista:
+  const displayedSales = showTodayOnly
+    ? sales.filter((s) => isToday(s.sale_date))
+    : sales;
+
   // IMPRIMIR TICKET
   const handlePrintTicket = () => {
     // Generar el "formato" dentro de #ticketArea (ya lo tenemos en "ticketRef")
@@ -432,23 +494,26 @@ export default function SalesPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-100 p-4">
+    <div className="flex min-h-screen flex-col bg-blue-400 p-4">
       {/* Encabezado */}
-      <div className="mb-4 flex items-center justify-between bg-white p-4 shadow">
-        <h2 className="text-xl font-bold">Ventas</h2>
+      <div className="mb-4 flex items-center justify-between bg-blue-950 p-4 shadow">
+        <h2 className="text-xl font-bold text-white">Ventas</h2>
         <div className="flex gap-2">
           {/* Botón volver a dashboard */}
           <a
             href="/dashboard"
-            className="rounded bg-gray-400 px-4 py-2 font-semibold text-white hover:bg-gray-500"
+            className="flex items-center rounded bg-red-400 py-2 font-semibold text-white hover:bg-red-500"
           >
+            <ArrowBackIcon className="mr-1" />
             Volver
           </a>
+
           {/* Botón nueva venta */}
           <button
             onClick={() => setShowCreateModal(true)}
-            className="rounded bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+            className="flex items-center rounded bg-blue-600 py-2 font-semibold text-white hover:bg-blue-700"
           >
+            <MonetizationOnIcon className="mr-1" />
             Nueva Venta
           </button>
         </div>
@@ -465,52 +530,92 @@ export default function SalesPage() {
           <p>Cargando ventas...</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-200">
-                  <th className="border p-2 text-center">ID</th>
-                  <th className="border p-2">Usuario</th>
-                  <th className="border p-2">Fecha</th>
-                  <th className="border p-2">Método Pago</th>
-                  <th className="border p-2">Total</th>
-                  <th className="border p-2">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sales.map((sale) => (
-                  <tr key={sale.id}>
-                    <td className="border p-2 text-center">{sale.id}</td>
-                    <td className="border p-2">
-                      {sale.user_name
-                        ? sale.user_name
-                        : `UserID ${sale.user_id}`}
-                    </td>
-                    <td className="border p-2">
-                      {new Date(sale.sale_date).toLocaleString()}
-                    </td>
-                    <td className="border p-2">{sale.payment_method}</td>
-                    <td className="border p-2">${sale.total}</td>
-                    <td className="border p-2">
-                      {/* Ver detalle */}
-                      <button
-                        onClick={() => handleViewDetail(sale.id)}
-                        className="rounded bg-green-500 px-2 py-1 text-white hover:bg-green-600"
-                      >
-                        Ver detalle
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => setShowTodayOnly(!showTodayOnly)}
+              sx={{ mb: 2 }}
+            >
+              {showTodayOnly ? "Mostrar Todas" : "Ventas de Hoy"}
+            </Button>
+            <div className="flex gap-2 mb-4">
+              <TextField
+                label="Desde"
+                type="date"
+                slotProps={{ inputLabel: { shrink: true } }}
+                value={fromDate || ""}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+              <TextField
+                label="Hasta"
+                type="date"
+                slotProps={{ inputLabel: { shrink: true } }}
+                value={toDate || ""}
+                onChange={(e) => setToDate(e.target.value)}
+              />
+
+              <Button variant="contained" color="primary" onClick={() => fetchSales(fromDate || "", toDate || "")}>
+                Aplicar Filtro
+              </Button>
+              <Button
+                variant="outlined"
+                color="secondary"
+                onClick={resetFilters}
+              >
+                Ver Todas
+              </Button>
+            </div>
+            <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+              <Table sx={{ minWidth: 650 }} aria-label="sales table">
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="center">ID</TableCell>
+                    <TableCell>Usuario</TableCell>
+                    <TableCell>Fecha</TableCell>
+                    <TableCell>Metodo Pago</TableCell>
+                    <TableCell>Total</TableCell>
+                    <TableCell>Acciones</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {displayedSales.map((sale) => (
+                    <TableRow key={sale.id}>
+                      <TableCell align="center">{sale.id}</TableCell>
+                      <TableCell className="border p-2">
+                        {sale.user_name
+                          ? sale.user_name
+                          : `UserID ${sale.user_id}`}
+                      </TableCell>
+                      <TableCell className="border p-2">
+                        {new Date(sale.sale_date).toLocaleString()}
+                      </TableCell>
+                      <TableCell>{sale.payment_method}</TableCell>
+                      <TableCell>${sale.total}</TableCell>
+                      <TableCell className="border p-2">
+                        {/* Ver detalle */}
+
+                        <Button
+                          variant="contained"
+                          color="success"
+                          onClick={() => handleViewDetail(sale.id)}
+                          sx={{ mr: 1 }}
+                        >
+                          Ver detalle
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </div>
         )}
       </div>
 
       {/* MODAL VER DETALLE DE LA VENTA */}
       {showDetailModal && detailSaleId && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="w-full max-w-lg rounded bg-white p-6 shadow">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 ">
+          <div className="w-full max-w-lg rounded bg-white p-6 shadow overflow-x-scroll">
             <h3 className="mb-4 text-xl font-bold">
               Detalle de Venta #{detailSaleId}
             </h3>
@@ -555,13 +660,14 @@ export default function SalesPage() {
                 onClick={() =>
                   window.open(`/print/ticket?saleId=${detailSaleId}`, "_blank")
                 }
+                className="rounded bg-purple-500 px-2 py-1 text-white hover:bg-purple-800"
               >
                 Imprimir Ticket
               </button>
               {/* BOTÓN CERRAR */}
               <button
                 onClick={() => setShowDetailModal(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded"
+                className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-800"
               >
                 Cerrar
               </button>
@@ -593,9 +699,9 @@ export default function SalesPage() {
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
               >
-                <option value="efectivo">Efectivo</option>
-                <option value="tarjeta">Tarjeta</option>
-                <option value="transferencia">Transferencia</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Tarjeta">Tarjeta</option>
+                <option value="Transferencia">Transferencia</option>
               </select>
             </div>
 
@@ -735,7 +841,6 @@ export default function SalesPage() {
           </div>
         </div>
       )}
-      
     </div>
   );
 }
