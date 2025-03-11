@@ -133,7 +133,7 @@ export default function ProductsPage() {
       return;
     }
     // Obtener /api/auth/me
-    fetch("http://localhost:4000/api/auth/me", {
+    fetch("https://punto-venta-backend.onrender.com/api/auth/me", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -178,7 +178,7 @@ export default function ProductsPage() {
     if (!token) return;
 
     try {
-      let url = "http://localhost:4000/api/products";
+      let url = "https://punto-venta-backend.onrender.com/api/products";
       if (text) {
         url += `?search=${encodeURIComponent(text)}`;
       }
@@ -235,7 +235,7 @@ export default function ProductsPage() {
         }));
       }
 
-      const res = await fetch("http://localhost:4000/api/products", {
+      const res = await fetch("https://punto-venta-backend.onrender.com/api/products", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -288,7 +288,7 @@ export default function ProductsPage() {
     childSearchTimeoutRef.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `http://localhost:4000/api/products?search=${encodeURIComponent(
+          `https://punto-venta-backend.onrender.com/api/products?search=${encodeURIComponent(
             childSearchText
           )}`,
           {
@@ -410,7 +410,7 @@ export default function ProductsPage() {
       if (token) {
         try {
           const res = await fetch(
-            `http://localhost:4000/api/products/${product.id}`,
+            `https://punto-venta-backend.onrender.com/api/products/${product.id}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -465,7 +465,7 @@ export default function ProductsPage() {
       }
 
       const res = await fetch(
-        `http://localhost:4000/api/products/${editingProduct.id}`,
+        `https://punto-venta-backend.onrender.com/api/products/${editingProduct.id}`,
         {
           method: "PUT",
           headers: {
@@ -510,7 +510,7 @@ export default function ProductsPage() {
     editChildSearchTimeoutRef.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `http://localhost:4000/api/products?search=${encodeURIComponent(
+          `https://punto-venta-backend.onrender.com/api/products?search=${encodeURIComponent(
             editChildSearchText
           )}`,
           {
@@ -591,7 +591,7 @@ export default function ProductsPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:4000/api/products/${id}`, {
+      const res = await fetch(`https://punto-venta-backend.onrender.com/api/products/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -107,7 +107,7 @@ export default function SalesPage() {
       return;
     }
     // Obtener info de /api/auth/me
-    fetch("http://localhost:4000/api/auth/me", {
+    fetch("https://punto-venta-backend.onrender.com/api/auth/me", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -153,7 +153,7 @@ export default function SalesPage() {
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `http://localhost:4000/api/products?search=${searchText}`,
+          `https://punto-venta-backend.onrender.com/api/products?search=${searchText}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -188,7 +188,7 @@ export default function SalesPage() {
     const token = localStorage.getItem("token");
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:4000/api/sales/${id}`, {
+      const res = await fetch(`https://punto-venta-backend.onrender.com/api/sales/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -214,7 +214,7 @@ export default function SalesPage() {
     const finalFrom = customFrom !== undefined ? customFrom : fromDate;
     const finalTo = customTo !== undefined ? customTo : toDate;
 
-    let url = "http://localhost:4000/api/sales";
+    let url = "https://punto-venta-backend.onrender.com/api/sales";
 
     if (finalFrom && finalTo) {
       url += `?from=${finalFrom}&to=${finalTo}`;
@@ -277,7 +277,7 @@ export default function SalesPage() {
     if (!token) return;
 
     try {
-      const res = await fetch(`http://localhost:4000/api/sales/${saleId}`, {
+      const res = await fetch(`https://punto-venta-backend.onrender.com/api/sales/${saleId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -314,7 +314,7 @@ export default function SalesPage() {
         payment_method: paymentMethod,
         items: newSaleItems,
       };
-      const res = await fetch("http://localhost:4000/api/sales", {
+      const res = await fetch("https://punto-venta-backend.onrender.com/api/sales", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -415,7 +415,7 @@ export default function SalesPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:4000/api/products/barcode/${code}`,
+        `https://punto-venta-backend.onrender.com/api/products/barcode/${code}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

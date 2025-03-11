@@ -68,7 +68,7 @@ export default function DashboardPage() {
       return;
     }
     // Llamamos a /api/auth/me
-    fetch("http://localhost:4000/api/auth/me", {
+    fetch("https://punto-venta-backend.onrender.com/api/auth/me", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -96,7 +96,7 @@ export default function DashboardPage() {
 
     setError("");
     try {
-      const res = await fetch("http://localhost:4000/api/users", {
+      const res = await fetch("https://punto-venta-backend.onrender.com/api/users", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -143,7 +143,7 @@ export default function DashboardPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:4000/api/users/${editingUser.id}`,
+        `https://punto-venta-backend.onrender.com/api/users/${editingUser.id}`,
         {
           method: "PUT",
           headers: {
@@ -191,7 +191,7 @@ export default function DashboardPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:4000/api/users/${passwordUserId}/password`,
+        `https://punto-venta-backend.onrender.com/api/users/${passwordUserId}/password`,
         {
           method: "PUT",
           headers: {

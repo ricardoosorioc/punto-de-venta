@@ -32,7 +32,7 @@ export default function PrintTicketPage() {
   const fetchSaleDetail = async (id: number) => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    const res = await fetch(`http://localhost:4000/api/sales/${id}`, {
+    const res = await fetch(`https://punto-venta-backend.onrender.com/api/sales/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();

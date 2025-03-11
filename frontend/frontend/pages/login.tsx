@@ -15,7 +15,7 @@ export default function LoginPage() {
     setError(""); // limpiar error
 
     try {
-      const response = await fetch("http://localhost:4000/api/auth/login", {
+      const response = await fetch("https://punto-venta-backend.onrender.com/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

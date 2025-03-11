@@ -64,7 +64,7 @@ export default function ReportsPage() {
       router.push("/login");
       return;
     }
-    fetch("http://localhost:4000/api/auth/me", {
+    fetch("https://punto-venta-backend.onrender.com/api/auth/me", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -105,7 +105,7 @@ export default function ReportsPage() {
     if (!token) return;
     try {
       const res = await fetch(
-        `http://localhost:4000/api/reports/sales?range=${range}`,
+        `https://punto-venta-backend.onrender.com/api/reports/sales?range=${range}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -129,7 +129,7 @@ export default function ReportsPage() {
     if (!token) return;
     try {
       const res = await fetch(
-        `http://localhost:4000/api/reports/profit?range=${range}`,
+        `https://punto-venta-backend.onrender.com/api/reports/profit?range=${range}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -153,7 +153,7 @@ export default function ReportsPage() {
     if (!token) return;
     try {
       const res = await fetch(
-        `http://localhost:4000/api/reports/top-products?limit=${limit}`,
+        `https://punto-venta-backend.onrender.com/api/reports/top-products?limit=${limit}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
