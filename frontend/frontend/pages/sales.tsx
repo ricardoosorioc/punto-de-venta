@@ -678,7 +678,7 @@ export default function SalesPage() {
       {/* MODAL CREAR VENTA */}
       {showCreateModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="w-full max-w-md rounded bg-white p-6 shadow">
+          <div className="w-full max-w-md max-h-[90vh] overflow-auto rounded bg-white p-6 shadow">
             <div className="flex flex-row justify-between">
               <h3 className="mb-4 text-xl font-bold">Nueva Venta</h3>
 

@@ -1006,7 +1006,7 @@ export default function ProductsPage() {
                   {/* Form para buscar e insertar hijo */}
                   <div>
                     <label className="block font-semibold text-gray-700">
-                      Buscar hijo
+                      Buscar Producto hijo
                     </label>
                     <input
                       type="text"
@@ -1053,7 +1053,7 @@ export default function ProductsPage() {
                       className="mb-4 w-full rounded bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
                       onClick={handleAddChild}
                     >
-                      Agregar Hijo
+                      Agregar Producto Hijo
                     </button>
                   </div>
                 </div>
